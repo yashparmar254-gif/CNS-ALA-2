@@ -1,0 +1,2665 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Malware Behavior Simulator</title>
+
+<style>
+:root{
+    --bg:#020617;
+    --panel:#0f172a;
+    --border:#334155;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --blue:#38bdf8;
+    --green:#22c55e;
+    --red:#ef4444;
+    --orange:#f59e0b;
+    --purple:#a855f7;
+    --cyan:#06b6d4;
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:
+        radial-gradient(circle at top,#172554 0,#020617 45%,#000 100%);
+    color:var(--text);
+    min-height:100vh;
+}
+
+button,
+select{
+    font-family:inherit;
+}
+
+header{
+    padding:25px 20px;
+    text-align:center;
+    background:rgba(2,6,23,.92);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(12px);
+    position:sticky;
+    top:0;
+    z-index:50;
+}
+
+.logo{
+    font-size:38px;
+    margin-bottom:7px;
+}
+
+header h1{
+    color:var(--blue);
+    font-size:32px;
+}
+
+header p{
+    color:var(--muted);
+    margin-top:7px;
+}
+
+.safe-banner{
+    width:94%;
+    max-width:1250px;
+    margin:18px auto;
+    padding:14px 18px;
+    border:1px solid var(--green);
+    border-radius:12px;
+    background:rgba(34,197,94,.08);
+    color:#86efac;
+    text-align:center;
+}
+
+.container{
+    width:94%;
+    max-width:1250px;
+    margin:auto;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:250px 1fr;
+    gap:18px;
+}
+
+.sidebar,
+.main,
+.card{
+    background:rgba(15,23,42,.92);
+    border:1px solid var(--border);
+    border-radius:16px;
+}
+
+.sidebar{
+    padding:18px;
+    height:max-content;
+    position:sticky;
+    top:115px;
+}
+
+.sidebar h2{
+    margin-bottom:15px;
+}
+
+.threat-btn{
+    width:100%;
+    padding:14px;
+    margin:6px 0;
+    background:#020617;
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:11px;
+    cursor:pointer;
+    text-align:left;
+    transition:.25s;
+}
+
+.threat-btn:hover{
+    transform:translateX(4px);
+    border-color:var(--blue);
+}
+
+.threat-btn.active{
+    background:#172554;
+    border-color:var(--blue);
+    box-shadow:0 0 18px rgba(56,189,248,.18);
+}
+
+.threat-icon{
+    font-size:24px;
+    margin-right:8px;
+}
+
+.sidebar-info{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid var(--border);
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.6;
+}
+
+.main{
+    padding:20px;
+}
+
+.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.title-area h2{
+    font-size:25px;
+}
+
+.title-area p{
+    color:var(--muted);
+    margin-top:5px;
+}
+
+.badge{
+    display:inline-block;
+    padding:8px 13px;
+    border-radius:20px;
+    border:1px solid var(--blue);
+    background:#172554;
+    color:#7dd3fc;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.controls{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:20px 0;
+}
+
+.btn{
+    padding:11px 15px;
+    border:none;
+    border-radius:9px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:.2s;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.1);
+}
+
+.btn-report{
+    background:var(--purple);
+    color:white;
+}
+
+.btn-full{
+    background:#0369a1;
+    color:white;
+}
+
+.btn-download{
+    background:#0891b2;
+    color:white;
+}
+
+.speed-box{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:#020617;
+    border:1px solid var(--border);
+    padding:5px 9px;
+    border-radius:9px;
+}
+
+.speed-box label{
+    color:var(--muted);
+    font-size:12px;
+}
+
+.speed-box select{
+    background:#0f172a;
+    color:white;
+    border:1px solid #475569;
+    border-radius:6px;
+    padding:5px;
+}
+
+/* STATS */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.stat{
+    padding:15px;
+    background:#020617;
+    border:1px solid var(--border);
+    border-radius:12px;
+    text-align:center;
+}
+
+.stat-title{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+}
+
+.stat-value{
+    display:block;
+    margin-top:6px;
+    font-size:25px;
+    font-weight:bold;
+    color:var(--blue);
+}
+
+#threatLevel{
+    color:var(--green);
+}
+
+/* PROGRESS */
+
+.progress-area{
+    margin-bottom:18px;
+}
+
+.progress-head{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:7px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.progress{
+    height:10px;
+    background:#020617;
+    border-radius:20px;
+    overflow:hidden;
+    border:1px solid var(--border);
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(
+        90deg,
+        var(--green),
+        var(--blue),
+        var(--red)
+    );
+    transition:width .4s;
+}
+
+/* NETWORK */
+
+.network{
+    position:relative;
+    height:470px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    border-radius:15px;
+    background:
+        linear-gradient(
+            rgba(56,189,248,.045) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(56,189,248,.045) 1px,
+            transparent 1px
+        ),
+        #020617;
+    background-size:35px 35px;
+}
+
+.network-title{
+    position:absolute;
+    top:15px;
+    left:18px;
+    color:#64748b;
+    font-size:12px;
+    z-index:10;
+}
+
+.connection{
+    position:absolute;
+    height:2px;
+    background:#1e40af;
+    transform-origin:left center;
+    opacity:.45;
+    z-index:1;
+    transition:.4s;
+}
+
+.connection.active{
+    background:#ef4444;
+    box-shadow:0 0 8px #ef4444;
+    opacity:1;
+}
+
+.c1{
+    width:270px;
+    left:13%;
+    top:25%;
+    transform:rotate(-3deg);
+}
+
+.c2{
+    width:250px;
+    left:43%;
+    top:25%;
+    transform:rotate(7deg);
+}
+
+.c3{
+    width:260px;
+    left:23%;
+    top:69%;
+    transform:rotate(-15deg);
+}
+
+.c4{
+    width:250px;
+    left:55%;
+    top:66%;
+    transform:rotate(15deg);
+}
+
+.c5{
+    width:250px;
+    left:25%;
+    top:38%;
+    transform:rotate(22deg);
+}
+
+/* NODES */
+
+.node{
+    position:absolute;
+    width:68px;
+    height:68px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#172554;
+    border:2px solid var(--blue);
+    font-size:28px;
+    z-index:5;
+    transition:.5s;
+}
+
+.node small{
+    position:absolute;
+    top:72px;
+    white-space:nowrap;
+    font-size:10px;
+    color:#94a3b8;
+}
+
+.node.infected{
+    background:#450a0a;
+    border-color:var(--red);
+    box-shadow:0 0 25px rgba(239,68,68,.8);
+    animation:pulse 1s infinite;
+}
+
+.node.trojan{
+    background:#422006;
+    border-color:var(--orange);
+    box-shadow:0 0 22px rgba(245,158,11,.7);
+    animation:pulse 1s infinite;
+}
+
+.n1{left:8%;top:17%}
+.n2{left:38%;top:13%}
+.n3{left:73%;top:18%}
+.n4{left:20%;top:63%}
+.n5{left:50%;top:51%}
+.n6{left:80%;top:66%}
+
+@keyframes pulse{
+
+    0%,100%{
+        transform:scale(1);
+    }
+
+    50%{
+        transform:scale(1.12);
+    }
+}
+
+/* PARTICLES */
+
+.particle{
+    position:absolute;
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    background:var(--red);
+    box-shadow:0 0 15px var(--red);
+    z-index:20;
+    pointer-events:none;
+    animation:particleMove 1.1s linear forwards;
+}
+
+@keyframes particleMove{
+
+    0%{
+        opacity:1;
+        transform:scale(.5);
+    }
+
+    50%{
+        opacity:1;
+        transform:scale(1.5);
+    }
+
+    100%{
+        opacity:0;
+        transform:scale(.1);
+    }
+}
+
+/* LOG + CHART */
+
+.bottom-grid{
+    display:grid;
+    grid-template-columns:1.3fr .7fr;
+    gap:15px;
+    margin-top:18px;
+}
+
+.card{
+    padding:17px;
+}
+
+.card h3{
+    margin-bottom:12px;
+}
+
+.log-box{
+    height:230px;
+    overflow:auto;
+    background:#020617;
+    border:1px solid var(--border);
+    border-radius:10px;
+}
+
+.log{
+    padding:8px 10px;
+    border-bottom:1px solid #172033;
+    font-family:monospace;
+    font-size:12px;
+    color:#94a3b8;
+}
+
+.log-time{
+    color:#38bdf8;
+}
+
+.log-success{
+    color:#4ade80;
+}
+
+.log-warning{
+    color:#fbbf24;
+}
+
+.log-danger{
+    color:#f87171;
+}
+
+.chart{
+    height:230px;
+    display:flex;
+    align-items:flex-end;
+    gap:9px;
+    padding:15px 8px 5px;
+    background:#020617;
+    border:1px solid var(--border);
+    border-radius:10px;
+}
+
+.bar{
+    flex:1;
+    min-width:10px;
+    height:5%;
+    background:linear-gradient(
+        to top,
+        #2563eb,
+        #38bdf8
+    );
+    border-radius:5px 5px 0 0;
+    transition:height .4s;
+    position:relative;
+}
+
+.bar span{
+    position:absolute;
+    bottom:-18px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#64748b;
+    font-size:9px;
+}
+
+/* REPORT */
+
+.report-section{
+    margin:18px 0;
+}
+
+.report-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.report-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:15px;
+}
+
+.report-card{
+    padding:18px;
+    background:#020617;
+    border:1px solid var(--border);
+    border-radius:12px;
+}
+
+.report-card h3{
+    margin-bottom:10px;
+    color:var(--blue);
+}
+
+.report-card p{
+    color:#cbd5e1;
+    font-size:14px;
+    line-height:1.7;
+}
+
+.report-card ul{
+    margin:10px 0 0 18px;
+    color:#94a3b8;
+    line-height:1.7;
+    font-size:13px;
+}
+
+.timeline{
+    margin-top:15px;
+}
+
+.timeline-item{
+    display:flex;
+    gap:12px;
+    padding:10px;
+    border-left:2px solid #334155;
+    margin-left:8px;
+}
+
+.timeline-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--blue);
+    margin-left:-16px;
+    margin-top:4px;
+}
+
+.timeline-item p{
+    color:#94a3b8;
+    font-size:13px;
+}
+
+/* TOAST */
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#0f172a;
+    border:1px solid var(--blue);
+    padding:13px 17px;
+    border-radius:10px;
+    color:white;
+    transform:translateY(120px);
+    opacity:0;
+    transition:.3s;
+    z-index:100;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+/* FULLSCREEN */
+
+.fullscreen .network{
+    height:calc(100vh - 100px);
+}
+
+footer{
+    text-align:center;
+    color:#64748b;
+    padding:30px 10px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1000px){
+
+    .layout{
+        grid-template-columns:1fr;
+    }
+
+    .sidebar{
+        position:static;
+    }
+
+    .stats{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .bottom-grid{
+        grid-template-columns:1fr;
+    }
+
+    .report-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:650px){
+
+    header h1{
+        font-size:24px;
+    }
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .network{
+        height:420px;
+    }
+
+    .node{
+        width:55px;
+        height:55px;
+        font-size:23px;
+    }
+
+    .node small{
+        top:58px;
+    }
+
+    .n1{left:5%}
+    .n2{left:36%}
+    .n3{left:70%}
+    .n4{left:12%}
+    .n5{left:45%}
+    .n6{left:76%}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">🛡️</div>
+
+<h1>Malware Behavior Simulator</h1>
+
+<p>
+Interactive Cyber Security Educational Simulation
+</p>
+
+</header>
+
+<div class="safe-banner">
+
+🟢 <b>SAFE SIMULATION MODE:</b>
+
+This project only demonstrates theoretical malware behavior.
+It does not access, modify, delete, replicate or transmit real data.
+
+</div>
+
+<div class="container">
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<h2>Threat Types</h2>
+
+<button
+class="threat-btn active"
+data-type="virus"
+onclick="selectThreat('virus')">
+
+<span class="threat-icon">🦠</span>
+
+<b>Virus</b>
+
+<br>
+
+<small>File-based infection</small>
+
+</button>
+
+<button
+class="threat-btn"
+data-type="worm"
+onclick="selectThreat('worm')">
+
+<span class="threat-icon">🪱</span>
+
+<b>Worm</b>
+
+<br>
+
+<small>Network propagation</small>
+
+</button>
+
+<button
+class="threat-btn"
+data-type="trojan"
+onclick="selectThreat('trojan')">
+
+<span class="threat-icon">🐴</span>
+
+<b>Trojan</b>
+
+<br>
+
+<small>Disguised application</small>
+
+</button>
+
+<div class="sidebar-info">
+
+<b>Learning Objective</b>
+
+<p>
+
+Understand how different malware categories
+behave, spread and affect systems without
+executing real malware.
+
+</p>
+
+<br>
+
+<b>Simulation Environment</b>
+
+<p>
+
+6 virtual hosts<br>
+No real files<br>
+No real networking<br>
+No payload execution
+
+</p>
+
+</div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+<div class="topbar">
+
+<div class="title-area">
+
+<h2 id="simulationTitle">
+Virus Simulation
+</h2>
+
+<p id="simulationDescription">
+Simulates theoretical file-based infection behavior.
+</p>
+
+</div>
+
+<div
+class="badge"
+id="simulationBadge">
+
+FILE INFECTION
+
+</div>
+
+</div>
+
+
+<!-- CONTROLS -->
+
+<div class="controls">
+
+<button
+class="btn btn-report"
+onclick="scrollReport()">
+
+📋 Report
+
+</button>
+
+<button
+class="btn btn-full"
+onclick="toggleFullscreen()">
+
+⛶ Fullscreen
+
+</button>
+
+<button
+class="btn btn-download"
+onclick="downloadReport()">
+
+⬇ Download Report
+
+</button>
+
+<div class="speed-box">
+
+<label>Speed:</label>
+
+<select
+id="speedSelect"
+onchange="changeSpeed()">
+
+<option value="1500">
+Slow
+</option>
+
+<option value="1000" selected>
+Normal
+</option>
+
+<option value="500">
+Fast
+</option>
+
+<option value="250">
+Very Fast
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<!-- STATS -->
+
+<div class="stats">
+
+<div class="stat">
+
+<div class="stat-title">
+Time
+</div>
+
+<span
+class="stat-value"
+id="time">
+
+0s
+
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+Affected
+</div>
+
+<span
+class="stat-value"
+id="infected">
+
+0
+
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+Safe Hosts
+</div>
+
+<span
+class="stat-value"
+id="safe">
+
+6
+
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+Threat Level
+</div>
+
+<span
+class="stat-value"
+id="threatLevel">
+
+LOW
+
+</span>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-title">
+Events
+</div>
+
+<span
+class="stat-value"
+id="events">
+
+0
+
+</span>
+
+</div>
+
+</div>
+
+
+<!-- PROGRESS -->
+
+<div class="progress-area">
+
+<div class="progress-head">
+
+<span>
+Simulation Progress
+</span>
+
+<span id="progressText">
+0%
+</span>
+
+</div>
+
+<div class="progress">
+
+<div
+class="progress-bar"
+id="progressBar">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- NETWORK -->
+
+<div
+class="network"
+id="network">
+
+<div class="network-title">
+VIRTUAL NETWORK ENVIRONMENT
+</div>
+
+<div class="connection c1"></div>
+<div class="connection c2"></div>
+<div class="connection c3"></div>
+<div class="connection c4"></div>
+<div class="connection c5"></div>
+
+
+<div
+class="node n1"
+id="node1">
+
+💻
+
+<small>
+Host 01
+</small>
+
+</div>
+
+
+<div
+class="node n2"
+id="node2">
+
+💻
+
+<small>
+Host 02
+</small>
+
+</div>
+
+
+<div
+class="node n3"
+id="node3">
+
+💻
+
+<small>
+Host 03
+</small>
+
+</div>
+
+
+<div
+class="node n4"
+id="node4">
+
+💻
+
+<small>
+Host 04
+</small>
+
+</div>
+
+
+<div
+class="node n5"
+id="node5">
+
+💻
+
+<small>
+Host 05
+</small>
+
+</div>
+
+
+<div
+class="node n6"
+id="node6">
+
+💻
+
+<small>
+Host 06
+</small>
+
+</div>
+
+</div>
+
+
+<!-- LOG + CHART -->
+
+<div class="bottom-grid">
+
+
+<div class="card">
+
+<div
+style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<h3>
+📜 Activity Log
+</h3>
+
+<button
+class="btn"
+style="
+padding:7px 10px;
+font-size:11px;
+background:#334155;
+color:white;
+"
+onclick="clearLogs()">
+
+Clear
+
+</button>
+
+</div>
+
+
+<div
+class="log-box"
+id="logBox">
+
+<div class="log">
+
+<span class="log-time">
+[SYSTEM]
+</span>
+
+Simulator initialized.
+
+</div>
+
+<div class="log">
+
+<span class="log-success">
+[SAFE]
+</span>
+
+No real system resources are accessed.
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>
+📊 Affected Hosts
+</h3>
+
+<div
+class="chart"
+id="chart">
+
+<div class="bar">
+<span>1</span>
+</div>
+
+<div class="bar">
+<span>2</span>
+</div>
+
+<div class="bar">
+<span>3</span>
+</div>
+
+<div class="bar">
+<span>4</span>
+</div>
+
+<div class="bar">
+<span>5</span>
+</div>
+
+<div class="bar">
+<span>6</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+
+<!-- REPORT -->
+
+<section
+class="card report-section"
+id="report">
+
+<div class="report-header">
+
+<div>
+
+<h2>
+📋 Malware Analysis Report
+</h2>
+
+<p
+style="
+color:#94a3b8;
+margin-top:5px;
+">
+
+Educational analysis of simulated malware behavior
+
+</p>
+
+</div>
+
+<span class="badge">
+SAFE EDUCATIONAL MODEL
+</span>
+
+</div>
+
+
+<div class="report-grid">
+
+
+<div class="report-card">
+
+<h3>
+🦠 Virus
+</h3>
+
+<p>
+
+A virus is a type of malicious software that
+commonly depends on a host file or program.
+When the host is executed, the malicious code
+may attempt to affect other files.
+
+</p>
+
+<ul>
+
+<li>
+Usually associated with host files
+</li>
+
+<li>
+Can modify or infect files
+</li>
+
+<li>
+May spread through user actions
+</li>
+
+<li>
+Can affect system availability
+</li>
+
+</ul>
+
+</div>
+
+
+<div class="report-card">
+
+<h3>
+🪱 Worm
+</h3>
+
+<p>
+
+A worm is malware that can propagate from one
+system to another, commonly using network or
+software vulnerabilities.
+
+</p>
+
+<ul>
+
+<li>
+Network-oriented propagation
+</li>
+
+<li>
+Does not require traditional host-file attachment
+</li>
+
+<li>
+Can spread rapidly
+</li>
+
+<li>
+May consume network resources
+</li>
+
+</ul>
+
+</div>
+
+
+<div class="report-card">
+
+<h3>
+🐴 Trojan
+</h3>
+
+<p>
+
+A Trojan disguises itself as legitimate or useful
+software and relies on a user being tricked into
+executing it.
+
+</p>
+
+<ul>
+
+<li>
+Uses deception
+</li>
+
+<li>
+May appear legitimate
+</li>
+
+<li>
+Depends on user interaction
+</li>
+
+<li>
+Can lead to unauthorized activity
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+
+<h3 style="margin-top:25px">
+🔬 Simulation Methodology
+</h3>
+
+
+<div class="timeline">
+
+
+<div class="timeline-item">
+
+<div class="timeline-dot"></div>
+
+<p>
+
+<b>Step 1:</b>
+
+The simulator creates six virtual computer nodes.
+
+</p>
+
+</div>
+
+
+<div class="timeline-item">
+
+<div class="timeline-dot"></div>
+
+<p>
+
+<b>Step 2:</b>
+
+A theoretical malware type is selected.
+
+</p>
+
+</div>
+
+
+<div class="timeline-item">
+
+<div class="timeline-dot"></div>
+
+<p>
+
+<b>Step 3:</b>
+
+The simulator generates visual events representing
+the selected malware behavior.
+
+</p>
+
+</div>
+
+
+<div class="timeline-item">
+
+<div class="timeline-dot"></div>
+
+<p>
+
+<b>Step 4:</b>
+
+Affected and safe virtual hosts are counted.
+
+</p>
+
+</div>
+
+
+<div class="timeline-item">
+
+<div class="timeline-dot"></div>
+
+<p>
+
+<b>Step 5:</b>
+
+The final statistics can be downloaded as a report.
+
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<div
+class="toast"
+id="toast">
+
+Simulation started
+
+</div>
+
+
+<footer>
+
+Malware Behavior Simulator • Cyber Security Practical Project
+
+<br>
+
+Educational simulation only — no actual malware functionality
+
+</footer>
+
+
+<script>
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentThreat = "virus";
+
+let running = false;
+
+let timer = 0;
+
+let events = 0;
+
+let infectedCount = 0;
+
+let simulationInterval = null;
+
+let speed = 1000;
+
+
+/* =========================================================
+   THREAT DATA
+========================================================= */
+
+const threatData = {
+
+    virus: {
+
+        title:"Virus Simulation",
+
+        description:
+        "Simulates theoretical file-based infection behavior.",
+
+        badge:"FILE INFECTION",
+
+        logPrefix:"VIRUS",
+
+        icon:"🦠"
+
+    },
+
+    worm: {
+
+        title:"Worm Simulation",
+
+        description:
+        "Simulates theoretical network propagation behavior.",
+
+        badge:"NETWORK PROPAGATION",
+
+        logPrefix:"WORM",
+
+        icon:"🪱"
+
+    },
+
+    trojan: {
+
+        title:"Trojan Simulation",
+
+        description:
+        "Simulates a disguised application and deceptive behavior.",
+
+        badge:"DISGUISED APPLICATION",
+
+        logPrefix:"TROJAN",
+
+        icon:"🐴"
+
+    }
+
+};
+
+
+/* =========================================================
+   SELECT THREAT
+   CLICK = IMMEDIATE START
+========================================================= */
+
+function selectThreat(type){
+
+    currentThreat = type;
+
+    resetSimulation(false);
+
+    document
+    .querySelectorAll(".threat-btn")
+    .forEach(button => {
+
+        button.classList.remove("active");
+
+    });
+
+
+    const selected =
+        document.querySelector(
+            `.threat-btn[data-type="${type}"]`
+        );
+
+
+    if(selected){
+
+        selected.classList.add("active");
+
+    }
+
+
+    const data = threatData[type];
+
+
+    document.getElementById(
+        "simulationTitle"
+    ).textContent = data.title;
+
+
+    document.getElementById(
+        "simulationDescription"
+    ).textContent = data.description;
+
+
+    document.getElementById(
+        "simulationBadge"
+    ).textContent = data.badge;
+
+
+    addLog(
+        `[SYSTEM] ${data.logPrefix} selected. Simulation starting automatically.`,
+        "success"
+    );
+
+
+    showToast(
+        data.icon + " " +
+        data.title +
+        " started"
+    );
+
+
+    /* AUTOMATIC START */
+
+    startSimulation();
+
+}
+
+
+/* =========================================================
+   AUTOMATIC START
+========================================================= */
+
+function startSimulation(){
+
+    stopSilently();
+
+    running = true;
+
+    createTimer();
+
+}
+
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+function createTimer(){
+
+    clearInterval(simulationInterval);
+
+
+    simulationInterval =
+        setInterval(() => {
+
+            if(!running){
+
+                return;
+
+            }
+
+
+            timer++;
+
+            updateTime();
+
+            runThreatBehavior();
+
+        }, speed);
+
+}
+
+
+/* =========================================================
+   THREAT BEHAVIOR
+========================================================= */
+
+function runThreatBehavior(){
+
+    if(currentThreat === "virus"){
+
+        virusBehavior();
+
+    }
+
+    else if(currentThreat === "worm"){
+
+        wormBehavior();
+
+    }
+
+    else if(currentThreat === "trojan"){
+
+        trojanBehavior();
+
+    }
+
+}
+
+
+/* =========================================================
+   VIRUS
+========================================================= */
+
+function virusBehavior(){
+
+    if(timer % 2 === 0){
+
+        const success =
+            infectNextHost();
+
+
+        if(success){
+
+            addLog(
+                "[VIRUS] Simulated file infection event.",
+                "danger"
+            );
+
+            createParticles();
+
+        }
+
+    }
+
+
+    if(infectedCount >= 6){
+
+        addLog(
+            "[VIRUS] All virtual hosts affected. Simulation complete.",
+            "warning"
+        );
+
+        stopSimulation();
+
+    }
+
+}
+
+
+/* =========================================================
+   WORM
+========================================================= */
+
+function wormBehavior(){
+
+    const success =
+        infectNextHost();
+
+
+    if(success){
+
+        activateConnections();
+
+        addLog(
+            "[WORM] Simulated network propagation event.",
+            "danger"
+        );
+
+        createParticles();
+
+    }
+
+
+    if(infectedCount >= 6){
+
+        addLog(
+            "[WORM] All virtual hosts reached.",
+            "warning"
+        );
+
+        stopSimulation();
+
+    }
+
+}
+
+
+/* =========================================================
+   TROJAN
+========================================================= */
+
+function trojanBehavior(){
+
+    if(timer === 1){
+
+        addLog(
+            "[TROJAN] Simulated trusted application launched.",
+            "warning"
+        );
+
+        createTrojanEffect();
+
+    }
+
+
+    if(timer === 3){
+
+        addLog(
+            "[TROJAN] Simulated hidden behavior detected.",
+            "danger"
+        );
+
+        infectNextHost();
+
+        createTrojanEffect();
+
+    }
+
+
+    if(timer === 5){
+
+        addLog(
+            "[TROJAN] Simulation completed safely.",
+            "success"
+        );
+
+        stopSimulation();
+
+    }
+
+}
+
+
+/* =========================================================
+   INFECT NEXT HOST
+========================================================= */
+
+function infectNextHost(){
+
+    const nodes =
+        [...document.querySelectorAll(".node")];
+
+
+    const available =
+        nodes.filter(
+            node =>
+            !node.classList.contains("infected")
+        );
+
+
+    if(available.length === 0){
+
+        return false;
+
+    }
+
+
+    const node =
+        available[
+            Math.floor(
+                Math.random() *
+                available.length
+            )
+        ];
+
+
+    node.classList.add("infected");
+
+
+    node.innerHTML =
+        "⚠️" +
+        `<small>${getHostName(node)}</small>`;
+
+
+    infectedCount++;
+
+    events++;
+
+
+    updateStats();
+
+    updateChart();
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   HOST NAME
+========================================================= */
+
+function getHostName(node){
+
+    const small =
+        node.querySelector("small");
+
+
+    if(small){
+
+        return small.textContent;
+
+    }
+
+
+    return "Virtual Host";
+
+}
+
+
+/* =========================================================
+   TROJAN VISUAL EFFECT
+========================================================= */
+
+function createTrojanEffect(){
+
+    const node =
+        document.getElementById("node5");
+
+
+    node.classList.add("trojan");
+
+
+    node.innerHTML =
+        "🐴<small>Trusted App</small>";
+
+
+    setTimeout(() => {
+
+        node.classList.remove("trojan");
+
+    },800);
+
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function createParticles(){
+
+    const network =
+        document.getElementById("network");
+
+
+    for(let i=0;i<4;i++){
+
+        const particle =
+            document.createElement("div");
+
+
+        particle.className =
+            "particle";
+
+
+        particle.style.left =
+            Math.random()*90 + "%";
+
+
+        particle.style.top =
+            Math.random()*80 + "%";
+
+
+        network.appendChild(particle);
+
+
+        setTimeout(() => {
+
+            particle.remove();
+
+        },1100);
+
+    }
+
+}
+
+
+/* =========================================================
+   CONNECTION ANIMATION
+========================================================= */
+
+function activateConnections(){
+
+    const connections =
+        document.querySelectorAll(
+            ".connection"
+        );
+
+
+    connections.forEach(
+        (connection,index)=>{
+
+            if(index < infectedCount){
+
+                connection.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   STOP INTERNALLY
+========================================================= */
+
+function stopSimulation(){
+
+    running = false;
+
+    clearInterval(
+        simulationInterval
+    );
+
+    simulationInterval = null;
+
+}
+
+
+/* =========================================================
+   SILENT STOP
+========================================================= */
+
+function stopSilently(){
+
+    running = false;
+
+    clearInterval(
+        simulationInterval
+    );
+
+    simulationInterval = null;
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetSimulation(
+    addSystemLog = true
+){
+
+    stopSilently();
+
+
+    timer = 0;
+
+    events = 0;
+
+    infectedCount = 0;
+
+
+    updateStats();
+
+    updateTime();
+
+
+    document.getElementById(
+        "progressBar"
+    ).style.width = "0%";
+
+
+    document.getElementById(
+        "progressText"
+    ).textContent = "0%";
+
+
+    const nodes =
+        document.querySelectorAll(
+            ".node"
+        );
+
+
+    nodes.forEach(
+        (node,index)=>{
+
+            node.classList.remove(
+                "infected",
+                "trojan"
+            );
+
+
+            node.innerHTML =
+                "💻<small>Host 0" +
+                (index+1) +
+                "</small>";
+
+        }
+    );
+
+
+    document
+    .querySelectorAll(
+        ".connection"
+    )
+    .forEach(
+        connection=>{
+
+            connection.classList.remove(
+                "active"
+            );
+
+        }
+    );
+
+
+    updateChart();
+
+
+    if(addSystemLog){
+
+        addLog(
+            "[SYSTEM] Simulation reset.",
+            "success"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+function updateStats(){
+
+    document.getElementById(
+        "infected"
+    ).textContent =
+        infectedCount;
+
+
+    document.getElementById(
+        "safe"
+    ).textContent =
+        6 - infectedCount;
+
+
+    document.getElementById(
+        "events"
+    ).textContent =
+        events;
+
+
+    let level = "LOW";
+
+
+    if(infectedCount >= 2){
+
+        level = "MEDIUM";
+
+    }
+
+
+    if(infectedCount >= 5){
+
+        level = "HIGH";
+
+    }
+
+
+    const levelElement =
+        document.getElementById(
+            "threatLevel"
+        );
+
+
+    levelElement.textContent =
+        level;
+
+
+    if(level === "LOW"){
+
+        levelElement.style.color =
+            "#22c55e";
+
+    }
+
+    else if(level === "MEDIUM"){
+
+        levelElement.style.color =
+            "#f59e0b";
+
+    }
+
+    else{
+
+        levelElement.style.color =
+            "#ef4444";
+
+    }
+
+
+    const progress =
+        Math.round(
+            infectedCount / 6 * 100
+        );
+
+
+    document.getElementById(
+        "progressBar"
+    ).style.width =
+        progress + "%";
+
+
+    document.getElementById(
+        "progressText"
+    ).textContent =
+        progress + "%";
+
+}
+
+
+/* =========================================================
+   TIME
+========================================================= */
+
+function updateTime(){
+
+    document.getElementById(
+        "time"
+    ).textContent =
+        timer + "s";
+
+}
+
+
+/* =========================================================
+   CHART
+========================================================= */
+
+function updateChart(){
+
+    const bars =
+        document.querySelectorAll(
+            ".bar"
+        );
+
+
+    bars.forEach(
+        (bar,index)=>{
+
+            if(index < infectedCount){
+
+                bar.style.height =
+                    (20 + index * 13) +
+                    "%";
+
+            }
+
+            else{
+
+                bar.style.height =
+                    "5%";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SPEED
+========================================================= */
+
+function changeSpeed(){
+
+    speed =
+        Number(
+            document.getElementById(
+                "speedSelect"
+            ).value
+        );
+
+
+    if(running){
+
+        createTimer();
+
+    }
+
+
+    showToast(
+        "Simulation speed changed"
+    );
+
+}
+
+
+/* =========================================================
+   LOG
+========================================================= */
+
+function addLog(
+    message,
+    type = "normal"
+){
+
+    const logBox =
+        document.getElementById(
+            "logBox"
+        );
+
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        "log";
+
+
+    const time =
+        new Date()
+        .toLocaleTimeString();
+
+
+    let colorClass =
+        "log-time";
+
+
+    if(type === "success"){
+
+        colorClass =
+            "log-success";
+
+    }
+
+
+    if(type === "warning"){
+
+        colorClass =
+            "log-warning";
+
+    }
+
+
+    if(type === "danger"){
+
+        colorClass =
+            "log-danger";
+
+    }
+
+
+    item.innerHTML =
+        `<span class="${colorClass}">
+        [${time}]
+        </span> ${message}`;
+
+
+    logBox.prepend(item);
+
+}
+
+
+/* =========================================================
+   CLEAR LOG
+========================================================= */
+
+function clearLogs(){
+
+    document.getElementById(
+        "logBox"
+    ).innerHTML = "";
+
+
+    addLog(
+        "[SYSTEM] Activity log cleared.",
+        "success"
+    );
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+
+function showToast(message){
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(() => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+        },2200);
+
+}
+
+
+/* =========================================================
+   REPORT SCROLL
+========================================================= */
+
+function scrollReport(){
+
+    document.getElementById(
+        "report"
+    ).scrollIntoView({
+        behavior:"smooth"
+    });
+
+}
+
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+function toggleFullscreen(){
+
+    const network =
+        document.getElementById(
+            "network"
+        );
+
+
+    if(!document.fullscreenElement){
+
+        network.requestFullscreen()
+        .then(() => {
+
+            document.body.classList.add(
+                "fullscreen"
+            );
+
+        })
+        .catch(() => {
+
+            showToast(
+                "Fullscreen unavailable"
+            );
+
+        });
+
+    }
+
+    else{
+
+        document.exitFullscreen();
+
+        document.body.classList.remove(
+            "fullscreen"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DOWNLOAD REPORT
+========================================================= */
+
+function downloadReport(){
+
+    const data =
+
+`MALWARE BEHAVIOR SIMULATOR
+===========================
+
+Threat Type:
+${threatData[currentThreat].title}
+
+Simulation Time:
+${timer} seconds
+
+Affected Hosts:
+${infectedCount}
+
+Safe Hosts:
+${6-infectedCount}
+
+Total Events:
+${events}
+
+Threat Level:
+${document.getElementById("threatLevel").textContent}
+
+
+ANALYSIS
+--------
+
+Virus:
+A virus is malicious software that commonly uses
+a host file or program and may attempt to affect
+other files.
+
+Worm:
+A worm can propagate between systems, commonly
+through network or software vulnerabilities.
+
+Trojan:
+A Trojan disguises itself as legitimate software
+and relies on deception and user interaction.
+
+
+SAFETY
+------
+
+This simulator does not:
+
+- Modify real files
+- Delete real files
+- Scan real networks
+- Send network traffic
+- Execute malware
+- Create persistence
+- Replicate actual malware
+
+
+PURPOSE
+-------
+
+Educational demonstration of malware behavior.
+
+Generated:
+${new Date().toLocaleString()}
+`;
+
+
+    const blob =
+        new Blob(
+            [data],
+            {type:"text/plain"}
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href =
+        url;
+
+
+    link.download =
+        "malware-simulation-report.txt";
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    showToast(
+        "Report downloaded"
+    );
+
+}
+
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        if(
+            event.key.toLowerCase() ===
+            "r"
+        ){
+
+            resetSimulation();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+updateStats();
+
+updateChart();
+
+</script>
+
+</body>
+</html>
+```
